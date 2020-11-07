@@ -1,0 +1,21 @@
+{
+  "name": "tempestbird",
+  "version": "0.0.1",
+  "description": "Bird beak pecks breaking crab shellz.",
+  "repository": "https://www.github.com/snowbillr/tempestbird",
+  "author": "Hugh Bord",
+  "license": "GNAA",
+  "private": true,
+  "devDependencies": {
+    "babel-core": "6",
+    "babel-loader": "^7.0.0",
+    "babel-preset-env": "^1.0.0",
+    "copy-webpack-plugin": "^4.5.1",
+    "raw-loader": "^0.5.1",
+    "webpack": "^3.0.0",
+    "webpack-dev-server": "^2.0.0"
+  },
+  "dependencies": {
+    "phaser": "^3.0.0"
+  }
+}
