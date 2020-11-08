@@ -11,6 +11,15 @@ Shout outs to
 * IRC
 * INTERNET
 
+## Shit we need to do
+
+* phaser JS font for the tempest
+
+## Things to consider
+
+* I haven't done any game dev in about 10 years, and this is teh first time I've worked with phaserjs.
+* Darkmage has worked on his c sdl based game for three years to draw sprites and circles, so he has the experience.
+
 ## Components
 
 * Built with vuejs2
@@ -37,7 +46,7 @@ yarn install
 
 ### Compiles and hot-reloads for Non Homo development
 ```
-yarn serve
+yarn webpack-dev-server
 ```
 
 ### Compiles and minifies for Non Homo production
@@ -52,3 +61,7 @@ yarn lint
 
 ### Customize Non Homo configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+### Shout outs / credits / stuff used
+
+* https://www.fontspace.com/category/80s,atari,tempest
