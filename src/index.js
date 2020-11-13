@@ -1,14 +1,10 @@
 import 'phaser';
+import { MainGame } from './scenes/main-game';
 
-import { IntroSplash } from './scenes/intro-splash'; // Intro splash
-import { MainGame } from './scenes/main-game'; // Actual Game
-
-
-const gameConfig = {
-  
-  width: 680,
+const gameConfig = {  
+  width: 1000,
   height: 800,
-  scene: [MainGame, IntroSplash]
+  scene: [MainGame]
 };
 
 new Phaser.Game(gameConfig);

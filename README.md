@@ -20,7 +20,8 @@ Shout outs to
 * I instead have at least used geometric tempest levels
  * I had wanted to make the entire game geometric however towards the end it was time saving to use sprites for some parts.
 
-* Darkmage has resorted to spreading fake news about myself forfitting the competition. This is clearly fake news.
+* Darkmage has resorted to spreading fake news about myself forfitting the competition. This is clearly fake news. https://www.youtube.com/watch?v=7IuIpSVncpw
+`<jewbird-> i said you'd win but i never said i wasn't going to submit something`
 
 ## Development Log
 
