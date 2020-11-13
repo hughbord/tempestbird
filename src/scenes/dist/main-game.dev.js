@@ -44,9 +44,10 @@ function (_Phaser$Scene) {
       this.load.audio('blaster_explosition', 'assets/blasterExplosion.ogg');
       this.load.audio('blaster_move', 'assets/blasterMove.ogg');
       this.load.audio('enemy_bullet', 'assets/enemyBullet.ogg');
-      this.load.audio('enemy_explosion', 'assets/enemyExplosion.ogg'); // Nigga preload da bird
+      this.load.audio('enemy_explosion', 'assets/enemyExplosion.ogg'); // Nigga preload da bird n egg, shout outs to #egg
 
-      this.load.image('bird', 'assets/bird.png'); // Cheaped out cuz I couldn't be bothered to draw a vector triangle lol
+      this.load.image('bird', 'assets/bird.png');
+      this.load.image('egg', 'assets/egg.png'); // Cheaped out cuz I couldn't be bothered to draw a vector triangle lol
 
       this.load.image('small_triangle', 'assets/small_triangle.png');
     }
@@ -134,16 +135,14 @@ function (_Phaser$Scene) {
       this.gameState = 0;
       this.canMove = false; // counter for main loop to slow things down
 
-      this.counter = 0; // this.bullets = this.add.group({
-      //   classType: Bullet,
-      //   maxSize: 10,
-      //   runChildUpdate: true
-      // });
-      // this.bullets2 = this.add.group({
-      //   classType: Bullet,
-      //   maxSize: 10,
-      //   runChildUpdate: true
-      // });
+      this.counter = 0;
+      this.bullets = this.add.group({
+        classType: Bullet,
+        maxSize: 10,
+        runChildUpdate: false
+      });
+      this.speed = Phaser.Math.GetSpeed(400, 1);
+      this.eggs = [];
     }
   }, {
     key: "update",
@@ -182,8 +181,27 @@ function (_Phaser$Scene) {
       } // Shooting
 
 
-      if (this.input.keyboard.addKey('Q').isDown && this.counter === 1) {
+      if (this.input.keyboard.addKey('Q').isDown && this.counter === 2) {
+        var bullet = this.bullets.get();
+
+        if (bullet) {
+          bullet.fire(this.bird.x, this.bird.y);
+          bullet.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(bullet.x, bullet.y, this.centroid.x, this.centroid.y));
+        }
+
+        this.eggs.push(bullet);
         this.sound.play('blaster_bullet');
+      }
+
+      for (var i = 0; i < this.eggs.length; i++) {
+        if (this.eggs[i]) {
+          this.eggs[i].y -= 5;
+
+          if (this.eggs[i].y < -20) {
+            this.eggs[i].setActive(false);
+            this.eggs[i].setVisible(false);
+          }
+        }
       } // This will only display if this.debugMode is true
 
 
@@ -202,3 +220,41 @@ function (_Phaser$Scene) {
 }(Phaser.Scene);
 
 exports.MainGame = MainGame;
+
+var Bullet =
+/*#__PURE__*/
+function (_Phaser$GameObjects$S) {
+  _inherits(Bullet, _Phaser$GameObjects$S);
+
+  function Bullet(scene) {
+    var _this;
+
+    _classCallCheck(this, Bullet);
+
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(Bullet).call(this, scene, 0, 0, 'egg'));
+    scene.add.existing(_assertThisInitialized(_this));
+    _this.speed = Phaser.Math.GetSpeed(400, 1);
+    return _this;
+  }
+
+  _createClass(Bullet, [{
+    key: "fire",
+    value: function fire(x, y) {
+      this.setPosition(x, y - 50);
+      this.setActive(true);
+      this.setVisible(true);
+    }
+  }, {
+    key: "update",
+    value: function update(delta) {
+      this.y -= this.speed * delta;
+
+      if (this.y < -50) {
+        this.setActive(false);
+        this.setVisible(false);
+      }
+    }
+  }]);
+
+  return Bullet;
+}(Phaser.GameObjects.Sprite);

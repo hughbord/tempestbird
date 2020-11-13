@@ -13,8 +13,9 @@ export class MainGame extends Phaser.Scene {
     this.load.audio('enemy_bullet', 'assets/enemyBullet.ogg');
     this.load.audio('enemy_explosion', 'assets/enemyExplosion.ogg');
 
-    // Nigga preload da bird
+    // Nigga preload da bird n egg, shout outs to #egg
     this.load.image('bird', 'assets/bird.png');
+    this.load.image('egg', 'assets/egg.png');
 
     // Cheaped out cuz I couldn't be bothered to draw a vector triangle lol
     this.load.image('small_triangle', 'assets/small_triangle.png');
@@ -126,17 +127,14 @@ export class MainGame extends Phaser.Scene {
     // counter for main loop to slow things down
     this.counter = 0;
 
-    // this.bullets = this.add.group({
-    //   classType: Bullet,
-    //   maxSize: 10,
-    //   runChildUpdate: true
-    // });
+    this.bullets = this.add.group({
+      classType: Bullet,
+      maxSize: 10,
+      runChildUpdate: false
+    });
 
-    // this.bullets2 = this.add.group({
-    //   classType: Bullet,
-    //   maxSize: 10,
-    //   runChildUpdate: true
-    // });
+    this.speed = Phaser.Math.GetSpeed(400, 1);
+    this.eggs = [];
   }
 
   update() {
@@ -175,13 +173,39 @@ export class MainGame extends Phaser.Scene {
     }
 
     // Shooting
-    if (this.input.keyboard.addKey('Q').isDown && this.counter === 1) {
+    if (this.input.keyboard.addKey('Q').isDown && this.counter === 2) {
 
+      var bullet = this.bullets.get();
 
+      if (bullet) {
+        
+        bullet.fire(this.bird.x, this.bird.y);
+        bullet.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(bullet.x, bullet.y, this.centroid.x, this.centroid.y));
+      }
+
+      
+
+      this.eggs.push(bullet);
 
 
       this.sound.play('blaster_bullet');
     }
+
+    for (let i = 0; i < this.eggs.length ; i++) {
+
+      if (this.eggs[i]) {
+
+        this.eggs[i].y -= 5;
+
+        if (this.eggs[i].y < -20) {
+          this.eggs[i].setActive(false);
+          this.eggs[i].setVisible(false);
+        }
+      }
+
+    }
+
+
 
     // This will only display if this.debugMode is true
     if (this.debugMode) {
@@ -204,5 +228,28 @@ export class MainGame extends Phaser.Scene {
       this.counter = 0;
     }
 
+  }
+}
+
+class Bullet extends Phaser.GameObjects.Sprite {
+  constructor(scene) {
+    super(scene, 0, 0, 'egg');
+    scene.add.existing(this);
+    this.speed = Phaser.Math.GetSpeed(400, 1);
+  }
+  fire(x, y) {
+    this.setPosition(x, y - 50);
+
+    this.setActive(true);
+    this.setVisible(true);
+  }
+
+  update(delta) {
+    this.y -= this.speed * delta;
+
+    if (this.y < -50) {
+      this.setActive(false);
+      this.setVisible(false);
+    }
   }
 }
