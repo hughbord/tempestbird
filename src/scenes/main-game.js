@@ -17,6 +17,9 @@ export class MainGame extends Phaser.Scene {
     this.load.image('bird', 'assets/bird.png');
     this.load.image('egg', 'assets/egg.png');
 
+    // Crab man never won a rap battle against jewbird
+    this.load.image('crab', 'assets/crab.png');
+
     // Cheaped out cuz I couldn't be bothered to draw a vector triangle lol
     this.load.image('small_triangle', 'assets/small_triangle.png');
   }
