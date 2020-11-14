@@ -7,6 +7,10 @@ exports.MainGame = void 0;
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
+function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
+
+function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -29,11 +33,16 @@ function (_Phaser$Scene) {
   _inherits(MainGame, _Phaser$Scene);
 
   function MainGame() {
+    var _this;
+
     _classCallCheck(this, MainGame);
 
-    return _possibleConstructorReturn(this, _getPrototypeOf(MainGame).call(this, {
+    _this = _possibleConstructorReturn(this, _getPrototypeOf(MainGame).call(this, {
       key: "main"
     }));
+    _this.bullets;
+    _this.crabs;
+    return _this;
   }
 
   _createClass(MainGame, [{
@@ -138,13 +147,20 @@ function (_Phaser$Scene) {
       this.canMove = false; // counter for main loop to slow things down
 
       this.counter = 0;
-      this.bullets = this.add.group({
-        classType: Bullet,
-        maxSize: 10,
-        runChildUpdate: false
-      });
       this.speed = Phaser.Math.GetSpeed(400, 1);
-      this.eggs = [];
+      this.crabArray = [];
+      this.bullets = new Bullets(this);
+      this.crabs = new Crabs(this); // console.log({
+      //   bullets: this.bullets,
+      //   crabs: this.crabs
+      // });
+      // Centroid zone for bullet removal
+
+      this.zone = this.add.zone(this.centroid.x, this.centroid.y).setSize(35, 35);
+      this.physics.world.enable(this.zone);
+      this.zone.body.setAllowGravity(false);
+      this.zone.body.moves = false;
+      window.zone = this.zone;
     }
   }, {
     key: "update",
@@ -180,40 +196,28 @@ function (_Phaser$Scene) {
 
 
         this.bird.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.bird.x, this.bird.y, this.centroid.x, this.centroid.y));
-      } // Shooting
-
-
-      if (this.input.keyboard.addKey('Q').isDown && this.counter === 2) {
-        var bullet = this.bullets.get();
-
-        if (bullet) {
-          bullet.fire(this.bird.x, this.bird.y);
-          bullet.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(bullet.x, bullet.y, this.centroid.x, this.centroid.y));
-        }
-
-        this.eggs.push(bullet);
-        this.sound.play('blaster_bullet');
-      }
-
-      for (var i = 0; i < this.eggs.length; i++) {
-        if (this.eggs[i]) {
-          this.eggs[i].y -= 5;
-
-          if (this.eggs[i].y < -20) {
-            this.eggs[i].setActive(false);
-            this.eggs[i].setVisible(false);
-          }
-        }
       } // This will only display if this.debugMode is true
 
 
       if (this.debugMode) {
-        this.debugDisplay.setText(['x: ' + pointer.x, 'y: ' + pointer.y, 'prev-x: ' + this.xCheck, 'prev-y: ' + this.yCheck, 'player-x: ' + this.player.locationPoints[this.playerPosIndex].x, 'player-y: ' + this.player.locationPoints[this.playerPosIndex].y, 'mid x: ' + pointer.midPoint.x, 'mid y: ' + pointer.midPoint.y]);
+        this.debugDisplay.setText(['x: ' + pointer.x, 'y: ' + pointer.y, 'player-x: ' + this.player.locationPoints[this.playerPosIndex].x, 'player-y: ' + this.player.locationPoints[this.playerPosIndex].y, 'points-index: ' + this.playerPosIndex]);
       } // Reset delay counter
 
 
       if (this.counter >= 10) {
         this.counter = 0;
+        var rand = Math.floor(Math.random() * 100); // Spawn Crab
+
+        if (rand < 3) {
+          var randomPoint = this.enemyPoints[Math.floor(Math.random() * this.enemyPoints.length)];
+          var crab = this.crabs.spawnCrab(randomPoint.x, randomPoint.y, Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.centroid.x, this.centroid.y, randomPoint.x, randomPoint.y), this.centroid.x, this.centroid.y);
+        } // Shooting
+
+
+        if (this.input.keyboard.addKey('Q').isDown) {
+          this.bullets.fireBullet(this.bird.x, this.bird.y, Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.centroid.x, this.centroid.y, this.bird.x, this.bird.y), this.centroid.x, this.centroid.y);
+        } // console.log(this.zone.body.touching.none);
+
       }
     }
   }]);
@@ -225,33 +229,39 @@ exports.MainGame = MainGame;
 
 var Bullet =
 /*#__PURE__*/
-function (_Phaser$GameObjects$S) {
-  _inherits(Bullet, _Phaser$GameObjects$S);
+function (_Phaser$Physics$Arcad) {
+  _inherits(Bullet, _Phaser$Physics$Arcad);
 
-  function Bullet(scene) {
-    var _this;
-
+  function Bullet(scene, x, y) {
     _classCallCheck(this, Bullet);
 
-    _this = _possibleConstructorReturn(this, _getPrototypeOf(Bullet).call(this, scene, 0, 0, 'egg'));
-    scene.add.existing(_assertThisInitialized(_this));
-    _this.speed = Phaser.Math.GetSpeed(400, 1);
-    return _this;
+    return _possibleConstructorReturn(this, _getPrototypeOf(Bullet).call(this, scene, x, y, 'egg'));
   }
 
   _createClass(Bullet, [{
     key: "fire",
-    value: function fire(x, y) {
-      this.setPosition(x, y - 50);
+    value: function fire(x, y, angle, cx, cy) {
+      this.body.reset(x, y);
+      var centroid = new Phaser.Geom.Point(cx, cy);
+      this.setAngle(angle);
+      this.scene.physics.moveToObject(this, centroid, 350);
       this.setActive(true);
-      this.setVisible(true);
+      this.setVisible(true); // this.setVelocityY(-500);
+
+      this.scene.physics.add.overlap(this, window.zone);
+      this.scene.sound.play('blaster_bullet');
     }
   }, {
-    key: "update",
-    value: function update(delta) {
-      this.y -= this.speed * delta;
+    key: "preUpdate",
+    value: function preUpdate(time, delta) {
+      _get(_getPrototypeOf(Bullet.prototype), "preUpdate", this).call(this, time, delta);
 
-      if (this.y < -50) {
+      if (this.y <= -16) {
+        this.setActive(false);
+        this.setVisible(false);
+      }
+
+      if (!window.zone.body.touching.none) {
         this.setActive(false);
         this.setVisible(false);
       }
@@ -259,4 +269,125 @@ function (_Phaser$GameObjects$S) {
   }]);
 
   return Bullet;
-}(Phaser.GameObjects.Sprite);
+}(Phaser.Physics.Arcade.Sprite); // class Bullets extends Phaser.Physics.Arcade.Group {
+
+
+var Bullets =
+/*#__PURE__*/
+function (_Phaser$Physics$Arcad2) {
+  _inherits(Bullets, _Phaser$Physics$Arcad2);
+
+  function Bullets(scene) {
+    var _this2;
+
+    _classCallCheck(this, Bullets);
+
+    _this2 = _possibleConstructorReturn(this, _getPrototypeOf(Bullets).call(this, scene.physics.world, scene));
+
+    _this2.createMultiple({
+      frameQuantity: 100,
+      key: 'egg',
+      active: false,
+      visible: false,
+      classType: Bullet
+    });
+
+    return _this2;
+  }
+
+  _createClass(Bullets, [{
+    key: "fireBullet",
+    value: function fireBullet(x, y, angle, cx, cy) {
+      var bullet = this.getFirstDead(false);
+
+      if (bullet) {
+        bullet.fire(x, y, angle, cx, cy);
+      }
+    }
+  }]);
+
+  return Bullets;
+}(Phaser.Physics.Arcade.Group);
+
+var Crab =
+/*#__PURE__*/
+function (_Phaser$Physics$Arcad3) {
+  _inherits(Crab, _Phaser$Physics$Arcad3);
+
+  function Crab(scene, x, y, cx, cy) {
+    _classCallCheck(this, Crab);
+
+    return _possibleConstructorReturn(this, _getPrototypeOf(Crab).call(this, scene, x, y, 'crab', cx, cy));
+  }
+
+  _createClass(Crab, [{
+    key: "spawn",
+    value: function spawn(x, y, angle, cx, cy) {
+      this.body.reset(cx, cy);
+      this.setScale(0.1);
+      this.setActive(true);
+      this.setVisible(true);
+      this.setAngle(angle);
+      var target = new Phaser.Geom.Point(x, y);
+      this.scene.physics.moveToObject(this, target, 75);
+      this.timeAlive = 0;
+      console.log(this.zone);
+    }
+  }, {
+    key: "preUpdate",
+    value: function preUpdate(time, delta) {
+      _get(_getPrototypeOf(Crab.prototype), "preUpdate", this).call(this, time, delta);
+
+      this.timeAlive++;
+
+      if (this.timeAlive >= 2000) {
+        this.setActive(false);
+        this.setVisible(false);
+        console.log("Destroy crab. FUCK YOU DARKMAGE YA CUNT.");
+      }
+
+      if (this.scale < 1) {
+        this.setScale(0.008 * this.timeAlive);
+      }
+    }
+  }]);
+
+  return Crab;
+}(Phaser.Physics.Arcade.Sprite);
+
+var Crabs =
+/*#__PURE__*/
+function (_Phaser$Physics$Arcad4) {
+  _inherits(Crabs, _Phaser$Physics$Arcad4);
+
+  function Crabs(scene) {
+    var _this3;
+
+    _classCallCheck(this, Crabs);
+
+    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(Crabs).call(this, scene.physics.world, scene));
+
+    _this3.createMultiple({
+      frameQuantity: 50,
+      key: 'crab',
+      active: false,
+      visible: false,
+      classType: Crab
+    });
+
+    return _this3;
+  }
+
+  _createClass(Crabs, [{
+    key: "spawnCrab",
+    value: function spawnCrab(x, y, angle, cx, cy) {
+      var crab = this.getFirstDead(false);
+
+      if (crab) {
+        crab.spawn(x, y, angle, cx, cy);
+      }
+    }
+  }]);
+
+  return Crabs;
+}(Phaser.Physics.Arcade.Group);

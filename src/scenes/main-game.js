@@ -3,6 +3,9 @@ export class MainGame extends Phaser.Scene {
     super({
       key: "main"
     });
+
+    this.bullets;
+    this.crabs;
   }
 
   preload() {
@@ -22,6 +25,8 @@ export class MainGame extends Phaser.Scene {
 
     // Cheaped out cuz I couldn't be bothered to draw a vector triangle lol
     this.load.image('small_triangle', 'assets/small_triangle.png');
+
+
   }
 
   create() {
@@ -130,14 +135,24 @@ export class MainGame extends Phaser.Scene {
     // counter for main loop to slow things down
     this.counter = 0;
 
-    this.bullets = this.add.group({
-      classType: Bullet,
-      maxSize: 10,
-      runChildUpdate: false
-    });
-
     this.speed = Phaser.Math.GetSpeed(400, 1);
-    this.eggs = [];
+    this.crabArray = [];
+
+    this.bullets = new Bullets(this);
+    this.crabs = new Crabs(this);
+
+    // console.log({
+    //   bullets: this.bullets,
+    //   crabs: this.crabs
+    // });
+
+    // Centroid zone for bullet removal
+    this.zone = this.add.zone(this.centroid.x, this.centroid.y).setSize(35, 35);
+    this.physics.world.enable(this.zone);
+    this.zone.body.setAllowGravity(false);
+    this.zone.body.moves = false;
+
+    window.zone = this.zone;
   }
 
   update() {
@@ -175,84 +190,157 @@ export class MainGame extends Phaser.Scene {
       this.bird.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.bird.x, this.bird.y, this.centroid.x, this.centroid.y));
     }
 
-    // Shooting
-    if (this.input.keyboard.addKey('Q').isDown && this.counter === 2) {
-
-      var bullet = this.bullets.get();
-
-      if (bullet) {
-        
-        bullet.fire(this.bird.x, this.bird.y);
-        bullet.setAngle(Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(bullet.x, bullet.y, this.centroid.x, this.centroid.y));
-      }
-
-      
-
-      this.eggs.push(bullet);
-
-
-      this.sound.play('blaster_bullet');
-    }
-
-    for (let i = 0; i < this.eggs.length ; i++) {
-
-      if (this.eggs[i]) {
-
-        this.eggs[i].y -= 5;
-
-        if (this.eggs[i].y < -20) {
-          this.eggs[i].setActive(false);
-          this.eggs[i].setVisible(false);
-        }
-      }
-
-    }
-
-
 
     // This will only display if this.debugMode is true
     if (this.debugMode) {
       this.debugDisplay.setText([
         'x: ' + pointer.x,
         'y: ' + pointer.y,
-        'prev-x: ' + this.xCheck,
-        'prev-y: ' + this.yCheck,
 
         'player-x: ' + this.player.locationPoints[this.playerPosIndex].x,
         'player-y: ' + this.player.locationPoints[this.playerPosIndex].y,
 
-        'mid x: ' + pointer.midPoint.x,
-        'mid y: ' + pointer.midPoint.y,
+        'points-index: ' + this.playerPosIndex
       ]);
     }
 
     // Reset delay counter
     if (this.counter >= 10) {
       this.counter = 0;
+      let rand = Math.floor(Math.random() * 100);
+
+      // Spawn Crab
+      if (rand < 3) {
+        let randomPoint = this.enemyPoints[Math.floor((Math.random() * this.enemyPoints.length))];
+        let crab = this.crabs.spawnCrab(randomPoint.x, randomPoint.y, Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.centroid.x, this.centroid.y, randomPoint.x, randomPoint.y), this.centroid.x, this.centroid.y);
+      }
+
+      // Shooting
+      if (this.input.keyboard.addKey('Q').isDown) {
+        this.bullets.fireBullet(this.bird.x, this.bird.y, Phaser.Math.RAD_TO_DEG * Phaser.Math.Angle.Between(this.centroid.x, this.centroid.y, this.bird.x, this.bird.y), this.centroid.x, this.centroid.y);
+      }
+
+      // console.log(this.zone.body.touching.none);
     }
 
   }
 }
 
-class Bullet extends Phaser.GameObjects.Sprite {
-  constructor(scene) {
-    super(scene, 0, 0, 'egg');
-    scene.add.existing(this);
-    this.speed = Phaser.Math.GetSpeed(400, 1);
+class Bullet extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, x, y) {
+    super(scene, x, y, 'egg');
   }
-  fire(x, y) {
-    this.setPosition(x, y - 50);
+
+  fire(x, y, angle, cx, cy) {
+    this.body.reset(x, y);
+
+    let centroid = new Phaser.Geom.Point(cx, cy);
+    this.setAngle(angle);
+    this.scene.physics.moveToObject(this, centroid, 350);
 
     this.setActive(true);
     this.setVisible(true);
+    // this.setVelocityY(-500);
+
+    this.scene.physics.add.overlap(this, window.zone);
+    this.scene.sound.play('blaster_bullet');
   }
 
-  update(delta) {
-    this.y -= this.speed * delta;
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
 
-    if (this.y < -50) {
+    if (this.y <= -16) {
       this.setActive(false);
       this.setVisible(false);
+    }
+
+    if (!window.zone.body.touching.none) {
+      this.setActive(false);
+      this.setVisible(false);
+    }
+  }
+}
+
+// class Bullets extends Phaser.Physics.Arcade.Group {
+class Bullets extends Phaser.Physics.Arcade.Group {
+  constructor(scene) {
+    super(scene.physics.world, scene);
+
+    this.createMultiple({
+      frameQuantity: 100,
+      key: 'egg',
+      active: false,
+      visible: false,
+      classType: Bullet
+    });
+  }
+
+  fireBullet(x, y, angle, cx, cy) {
+    let bullet = this.getFirstDead(false);
+
+    if (bullet) {
+      bullet.fire(x, y, angle, cx, cy);
+    }
+  }
+}
+
+class Crab extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, x, y, cx, cy) {
+    super(scene, x, y, 'crab', cx, cy);
+  }
+
+  spawn(x, y, angle, cx, cy) {
+    this.body.reset(cx, cy);
+    this.setScale(0.1);
+
+    this.setActive(true);
+    this.setVisible(true);
+    this.setAngle(angle);
+
+    let target = new Phaser.Geom.Point(x, y);
+    this.scene.physics.moveToObject(this, target, 75);
+
+    this.timeAlive = 0;
+
+    console.log(this.zone);
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+
+    this.timeAlive++;
+
+    if (this.timeAlive >= 2000) {
+      this.setActive(false);
+      this.setVisible(false);
+      console.log("Destroy crab. FUCK YOU DARKMAGE YA CUNT.");
+    }
+
+    if (this.scale < 1) {
+      this.setScale(0.008 * this.timeAlive);
+    }
+
+  }
+}
+
+class Crabs extends Phaser.Physics.Arcade.Group {
+  constructor(scene) {
+    super(scene.physics.world, scene);
+
+    this.createMultiple({
+      frameQuantity: 50,
+      key: 'crab',
+      active: false,
+      visible: false,
+      classType: Crab
+    });
+  }
+
+  spawnCrab(x, y, angle, cx, cy) {
+    let crab = this.getFirstDead(false);
+
+    if (crab) {
+      crab.spawn(x, y, angle, cx, cy);
     }
   }
 }

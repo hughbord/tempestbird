@@ -10,32 +10,39 @@ Shout outs to
 * E2N2
 * IRC
 * INTERNET
+* BAN BEX
 
 ## Things to consider
 
-* I haven't done any game dev in about 10 years, and this is teh first time I've worked with phaserjs.
-* Darkmage has worked on his c sdl based game for three years to draw sprites and circles, so he has the experience.
-* I haven't done any coding with vectors or geometric shapes since you never have to do that stuff in web development.
+* I haven't done any game dev in about 10 years, and this is teh first time I've worked with phaserjs. I haven't done any coding with vectors or geometric shapes since you never have to do that stuff in web development. I also was kicked out of university for failing maths three times in relation to this type of polygon maths.
+* Darkmage has worked on his c sdl based game for three years to draw sprites and circles, so he has the experience with game development.
+
 * Darkmage really pussied out and did a circle as the level design. This the easiest approach.
 * I instead have at least used geometric tempest levels
  * I had wanted to make the entire game geometric however towards the end it was time saving to use sprites for some parts.
 
-* Darkmage has resorted to spreading fake news about myself forfitting the competition. This is clearly fake news. https://www.youtube.com/watch?v=7IuIpSVncpw
+* Darkmage has resorted to spreading fake news about myself quitting the competition. This is clearly fake news. https://www.youtube.com/watch?v=7IuIpSVncpw
+
 `<jewbird-> i said you'd win but i never said i wasn't going to submit something`
 
-## Development Log
+## Total hours development time
 
-###
+~ 11 Hours
 
-###
+Started Six days ago
 
-### Yesterday
+## Bugs (/ascii bugfree.txt)
 
-### Today
+* Bird egg lay upward
+* Triangle geometry line shit bingit probably knows
+* Moving around the Tempest shape isn't circular as the points are loaded into the array in an incorrect order.
+
+## Sounds
+
+The original atari tempest arcade machine had no sound files as sounds were generated programatically. So the only real way to get the sounds from tempest is to play the rom or video and capture the audio output.
 
 ## Components
 
-* Built with vuejs2
 * Game library https://phaser.io/ for all the shit darkmage will probably code himself reinventing the wheel like a fake dev fag
 
 ## Helpful Links
@@ -51,3 +58,5 @@ Shout outs to
 ### Shout outs / credits / stuff used
 
 * https://www.fontspace.com/category/80s,atari,tempest
+* bird sprite from some deviant art loser
+* crab sprite from i dono lol just stole it from bing search wat
